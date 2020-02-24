@@ -5,8 +5,8 @@
 #include <cmath>
 
 void waitForStart();
-void rotate(int mode,float angle);
-void translate(int mode,float angle,float velocity);
+void rot(int mode,float angle);
+void trans(int mode,float angle,float velocity);
 void moveToButton(int color);
 void StopAll();
 int testForColor();
@@ -27,23 +27,21 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 //Constants
 #define wheeldia            2.0
 #define centerrad           3.0
-#define radsper             .026
-#define rotatepercent       25.0
-#define translatepercent    30.0
+#define yodersConstant      0.01
+#define rotpercent       25.0
+#define transpercent    30.0
 #define maximumpercent      50.0
 #define PI                  3.14159265358979323846
-//This is the motor tuning section
-//NOTE: Proper tuning will be implemented later
-//NOTE: Current Values tuned for 30% speed!
-//Note For this Robot the Left Motor is considered the reference motor
-/* (motor #2)
- *  --> O-----O
+/* (motor #2)   (motor #3)
+ *  --> O-----O <--
  *       \   /
  *        \ /
  *         o
- *
+ *      (motor #1)
  *
 */
+
+//Motor Rotational Speeds Relative to the Back Motor Moving clockwise
 #define motor1multiccw      0.93           //This motor is really bad
 #define motor1multicw       0.97           //Each Multiplier modifies the percent each wheel gets
 #define motor2multiccw      1.0
@@ -51,14 +49,20 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 #define motor3multiccw      1.03           //Tuning from vex variance
 #define motor3multicw       1.05           //Tuning from vex variance
 
-
+//Threshold values for the CdS Cells
 #define BlueMax     1.5
 #define BlueMin     0.5
 #define RedMax      0.49999999
 #define RedMin      0
 
+//Threshold values for the Optosensors
+#define lineMin     3.3
+#define lineMax     3.3
+
 int main() {
-    int mode = 1;
+    float startime;
+    float endtime;
+    int mode = 3;
     switch(mode) {
     case 1:
 
@@ -97,26 +101,16 @@ int main() {
         LCD.Clear();
         waitForStart();
 
-        translate(1,0,30);
-        Sleep(1.0);
-        rotate(1,235);
-        translate(1,-90,30);
-        while(testForColor() == 0) {
-            //Wait until we see a color
-        }
-        StopAll();
-        moveToButton(testForColor());
-        rotate(1,90);
-        translate(1,0,30);
-        Sleep(2.0);
-        StopAll();
-        rotate(1,90);
-        translate(1,0,50);
-        Sleep(2.0);
-        StopAll();
-        translate(1,180,50);
-        Sleep(2.0);
-        StopAll();
+
+        break;
+    case 3: //Tune Rotaton
+        rot(1,3600);
+
+        break;
+
+    default:
+        LCD.Clear();
+        LCD.WriteRC("ERROR: Not a valid mode.",0,0);
         break;
     }
 }
@@ -127,48 +121,32 @@ void waitForStart() {
     }
 }
 
-void rotate(int mode,float angle) {
+void rot(int mode,float angle) {  //Dumbed down verison of rot, much more reliable
     switch(mode) {
-        case 1:	//Turn from robots local heading
+        case 1 :
+            float direction;
             float seconds;
-            float m1percent;
-            float m2percent;
-            float m3percent;
-            float distance;
-
-            distance = (angle/360) * 2 * PI * centerrad;
-            seconds = abs(distance / (wheeldia * PI)); //How many Rotations
-            seconds = seconds / (rotatepercent * radsper);
-            //rotatepercent * radsper (rotations per percent) = rotations per seconds
-            if(angle < 0) {
-                motor1.SetPercent(rotatepercent * motor1multiccw);
-                motor2.SetPercent(rotatepercent * motor2multiccw);
-                motor3.SetPercent(rotatepercent * motor3multiccw);
+            if(angle >= 0 ){
+                direction = -1.0;
+            }   else if (angle < 0) {
+                direction = 1.0;
             }
-            else if(angle == 0) {
-                //Do Nothing We do not need to rotate
-            }
-            else if(angle > 0) {
-                motor1.SetPercent(-rotatepercent * motor1multicw);
-                motor2.SetPercent(-rotatepercent * motor2multicw);
-                motor3.SetPercent(-rotatepercent * motor3multicw);
-            }
+            seconds = abs(angle * yodersConstant);
+            motor1.SetPercent(rotpercent * direction);
+            motor2.SetPercent(rotpercent * direction);
+            motor3.SetPercent(rotpercent * direction);
             Sleep(seconds);
-            motor1.Stop();
-            motor2.Stop();
-            motor3.Stop();
-
+            StopAll();
             break;
-
-        case 2:	//Turn to match RPS heading
-            //Currently Defunct
+        case 2:
+            //Currently Defunct, Waiting for RPS exploration
             break;
     }
 }
 
-void translate(int mode,float angle,float velocity) {
+void trans(int mode,float angle,float velocity) { // The current kinematics incur significant dift when not moving in a cardinal direction (UP DOWN LEFT RIGHT)
     switch(mode) {
-        case 1: //Translate from robots local heading
+        case 1: //translate from robots local heading
             float x;
             float y;
             x = cos(((angle+90)/180) * PI);
@@ -212,7 +190,7 @@ void translate(int mode,float angle,float velocity) {
             }
 
             break;
-        case 2:	//Translate relative to RPS
+        case 2:	//trans relative to RPS
             break;
     }
 }
@@ -240,36 +218,36 @@ int testForColor() {
 
 void moveToButton(int color) {
     if(color == 1) {//The color is blue is on the left
-        translate(1,90,30);
+        trans(1,90,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,0,30);
+        trans(1,0,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,180,30);
+        trans(1,180,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,-90,30);
+        trans(1,-90,30);
         Sleep(1.0);
         StopAll();
     }
     else if (color == 2) {//The color is red is on the right
-        translate(1,90,30);
+        trans(1,90,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,0,30);
+        trans(1,0,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,180,30);
+        trans(1,180,30);
         Sleep(1.0);
         StopAll();
 
-        translate(1,-90,30);
+        trans(1,-90,30);
         Sleep(1.0);
         StopAll();
     }
