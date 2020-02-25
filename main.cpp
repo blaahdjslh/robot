@@ -22,10 +22,27 @@ void trans(int mode,float angle,float velocity);
 void moveToButton(int color);
 //Moves to button based on color input
 
-void scanForLight();
+//void scanForLight();
+//Scans back and forth until a light is seen
+//Potential problems : ----> Could possibly think light is only blue due to stopping when it senses either color.
+//                           Therefore it could stop before it realizes the color is red, that is really bad.
+//                           Properly accounting for this would take more code that is really necessary so
+//                           just tune the line following movement.
+//Comment : This method should not be used for alignment, use the line following kit instead.
+
+void centerOnLine(float limit);
+//Stops the Robot when a line is at its center
+//Input limit : Maximum amount of time the robot can look for a line in seconds (helpful for breaking search loop)
+//Comment :
+
+void endOnLine(float limit);
+//Stops the Robot when no lines are detected by it
+//Input limit : Maximum amount of the robot can look fo the end of a line in seconds (helpful for breaking search loop)
+//Comment :
 
 void StopAll();
 //Stops all motors
+//Comment :
 
 int testForColor();
 //Tests for the color currently detected by the CdS Cell
@@ -41,9 +58,6 @@ int testForLine();
 //20 Line on the center
 //25 Line on the center and right
 //30 Line on the right
-
-//0 for nothing, 1 for blue, 2 for red
-
 
 FEHMotor motor1(FEHMotor::Motor0,12); //Back Motor
 FEHMotor motor2(FEHMotor::Motor1,12); //Left Motor
@@ -309,6 +323,28 @@ void moveToButton(int color) {
     }
     else {
         LCD.WriteRC("ERROR:NOBUTTONCOLOR",13,0);
+    }
+}
+
+void scanForLight() {
+    //Currently Defunct
+}
+
+void centerOnLine(float limit) {
+    float eTime = limit + TimeNow();
+    while(eTime > TimeNow()) {
+        if(testForLine() == 20) {
+            break;
+        }
+    }
+}
+
+void endOnLine(float limit) {
+    float eTime = limit + TimeNow();
+    while(eTime > TimeNow()) {
+        if(testForLine() == 0) {
+            break;
+        }
     }
 }
 
