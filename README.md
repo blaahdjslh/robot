@@ -21,4 +21,6 @@ Navigation Code for FEH Robotics.
 3. Identification of line positions.
 ## Future Improvementrs
 1. Comprehensive Translational Movement, including uniform motion in every direction.
-2. Comprehensive fall back modes for each stage of the course.
+2. Comprehensive Rotational Movement, including rotating while translating in any direction.
+3. Comprehensive fall back modes for each stage of the course.
+4. Curve based path planning (exotic and unneeded)
