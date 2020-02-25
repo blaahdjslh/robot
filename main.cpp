@@ -2,14 +2,45 @@
 #include <FEHUtility.h>
 #include <FEHMotor.h>
 #include <FEHIO.h>
-#include <cmath>
+#include <math.h>
+
 
 void waitForStart();
+//Waits until the color red is detected by the robot
+
 void rot(int mode,float angle);
+//Rotates the Robot
+//Input mode        Rotates relative to robot(1) Rotates to RPS relative angle(2)
+//Input angle       Amount to rotate in degrees sign dictates rotation direction(1), Angle to match the RPS (2)
+
 void trans(int mode,float angle,float velocity);
+//Translates the Robot
+//Input mode        Translating relative to robot(1) or RPS(2)
+//Input angle       Angle to translate at(1), angle to translate at relative to rps(2)
+//Input velocity    Speed to translate at
+
 void moveToButton(int color);
+//Moves to button based on color input
+
+void scanForLight();
+
 void StopAll();
+//Stops all motors
+
 int testForColor();
+//Tests for the color currently detected by the CdS Cell
+//0 for no color
+//1 for blue detected
+//2 for red detected
+
+int testForLine();
+//Tests for position of the line detected by the cell
+//0 For no line detected
+//10 Line on the left
+//15 Line on the center and left
+//20 Line on the center
+//25 Line on the center and right
+//30 Line on the right
 
 //0 for nothing, 1 for blue, 2 for red
 
@@ -24,12 +55,14 @@ AnalogInputPin  lineR(FEHIO::P1_0);
 AnalogInputPin  lineC(FEHIO::P1_1);
 AnalogInputPin  lineL(FEHIO::P1_2);
 
-//Constants
+//------Constants------//
 #define wheeldia            2.0
 #define centerrad           3.0
-#define yodersConstant      0.01
-#define rotpercent       25.0
-#define transpercent    30.0
+#define yodersConstant      0.0005028464    //<----- Dr. Yoder
+//Data
+//0.01257116 at 25%
+#define rotpercent          25.0
+#define transpercent        30.0
 #define maximumpercent      50.0
 #define PI                  3.14159265358979323846
 /* (motor #2)   (motor #3)
@@ -41,13 +74,14 @@ AnalogInputPin  lineL(FEHIO::P1_2);
  *
 */
 
-//Motor Rotational Speeds Relative to the Back Motor Moving clockwise
-#define motor1multiccw      0.93           //This motor is really bad
-#define motor1multicw       0.97           //Each Multiplier modifies the percent each wheel gets
+//Motor Rotational Speeds.
+//Motor 1 cw is always defined as 1.0
+#define motor1multiccw      1.0           //This motor is really bad
+#define motor1multicw       1.0           //Each Multiplier modifies the percent each wheel gets
 #define motor2multiccw      1.0
 #define motor2multicw       1.0
-#define motor3multiccw      1.03           //Tuning from vex variance
-#define motor3multicw       1.05           //Tuning from vex variance
+#define motor3multiccw      1.0           //Tuning from vex variance
+#define motor3multicw       1.0           //Tuning from vex variance
 
 //Threshold values for the CdS Cells
 #define BlueMax     1.5
@@ -56,13 +90,33 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 #define RedMin      0
 
 //Threshold values for the Optosensors
-#define lineMin     3.3
+#define lineMin     1.9
 #define lineMax     3.3
 
+
+//Robot Diagnostics Display
+/*
+ *   0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
+ *   __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __
+ *0 |CdS_Voltage Label                      Diagnostics Label
+ *1 |CdS_Voltage
+ *2 |
+ *3 |
+ *4 |Optosensor_Voltage Label
+ *5 |Left                         Center                     Right
+ *6 |Left Voltage                 Center Voltage             Right Voltage
+ *7 |
+ *8 |lastDetectedColor Label
+ *9 |lastDetectedColor Value
+ *10|
+ *11|lastDetectedLine Label
+ *12|lastDetectedLine Value
+ *13|
+ */
 int main() {
     float startime;
     float endtime;
-    int mode = 3;
+    int mode = 2;
     switch(mode) {
     case 1:
 
@@ -99,15 +153,30 @@ int main() {
     case 2:
         //This is the main course running function!
         LCD.Clear();
-        waitForStart();
+        //waitForStart();
+        LCD.Clear();
+        //Diagnostic Labels
+        LCD.WriteRC("CdS Voltage",0,0);
+        LCD.WriteRC("Diagnostics",0,14);
+        LCD.WriteRC("Optosensor Voltage",4,0);
+        LCD.WriteRC("Left",6,0);
+        LCD.WriteRC("Center",6,8);
+        LCD.WriteRC("Right",6,16);
+        LCD.WriteRC("last color",8,0);
+        LCD.WriteRC("last line",11,0);
 
-
+        while(true) { //Still testing the sensors
+            testForColor();
+            testForLine();
+        }
         break;
     case 3: //Tune Rotaton
         rot(1,3600);
 
         break;
-
+    case 4: //Tune Translation
+        trans(1,0,30);
+        Sleep(3.0);
     default:
         LCD.Clear();
         LCD.WriteRC("ERROR: Not a valid mode.",0,0);
@@ -117,7 +186,7 @@ int main() {
 
 void waitForStart() {
     while(testForColor() != 2) {
-        LCD.WriteRC("Waiting for Course Light...",3,3);
+        LCD.WriteRC("Waiting For Light",3,3);
     }
 }
 
@@ -131,10 +200,12 @@ void rot(int mode,float angle) {  //Dumbed down verison of rot, much more reliab
             }   else if (angle < 0) {
                 direction = 1.0;
             }
-            seconds = abs(angle * yodersConstant);
+            seconds = angle * yodersConstant * rotpercent;
+            seconds = fabs(seconds);
             motor1.SetPercent(rotpercent * direction);
             motor2.SetPercent(rotpercent * direction);
             motor3.SetPercent(rotpercent * direction);
+            //LCD.WriteRC(seconds,13,0);
             Sleep(seconds);
             StopAll();
             break;
@@ -201,21 +272,6 @@ void StopAll() {
     motor3.Stop();
 }
 
-int testForColor() {
-    if(CdS_cell.Value() >= BlueMin && CdS_cell.Value() <= BlueMax) {
-        return 1; //Blue
-        LCD.WriteRC("Its Blue!",4,4);
-    }
-    else if(CdS_cell.Value() >= RedMin && CdS_cell.Value() <= RedMax) {
-        return 2; //Red
-        LCD.WriteRC("Its Red!",4,4);
-    }
-    else {
-        LCD.WriteRC("No Color Detected",4,4);
-        return 0; //No Color
-    }
-}
-
 void moveToButton(int color) {
     if(color == 1) {//The color is blue is on the left
         trans(1,90,30);
@@ -235,7 +291,7 @@ void moveToButton(int color) {
         StopAll();
     }
     else if (color == 2) {//The color is red is on the right
-        trans(1,90,30);
+        trans(1,-90,30);
         Sleep(1.0);
         StopAll();
 
@@ -247,11 +303,84 @@ void moveToButton(int color) {
         Sleep(1.0);
         StopAll();
 
-        trans(1,-90,30);
+        trans(1,90,30);
         Sleep(1.0);
         StopAll();
     }
     else {
-        //Do nothing if no color is detected
+        LCD.WriteRC("ERROR:NOBUTTONCOLOR",13,0);
     }
+}
+
+int testForColor() {
+    LCD.WriteRC(CdS_cell.Value(),1,0);
+    LCD.WriteRC("        ",9,0);
+    if(CdS_cell.Value() >= BlueMin && CdS_cell.Value() <= BlueMax) {
+        LCD.WriteRC("1 - Blue",9,0);
+        return 1; //Blue
+    }
+    else if(CdS_cell.Value() >= RedMin && CdS_cell.Value() <= RedMax) {
+        LCD.WriteRC("2 - Red ",9,0);
+        return 2; //Red
+    }
+    else {
+        LCD.WriteRC("0 - None",9,0);
+        return 0; //No Color
+    }
+}
+
+int testForLine() {
+    float rV,cV,lV;
+    int rO,cO,lO;
+    int state;
+    rV = lineR.Value();
+    cV = lineC.Value();
+    lV = lineL.Value();
+
+    if(rV > 1.9) {
+        rO = 1;
+    }
+    else {
+        rO = 0;
+    }
+
+    if(cV > 1.9) {
+        cO = 1;
+    }
+    else {
+        cO = 0;
+    }
+
+    if(lV > 1.0) {
+        lO = 1;
+    }
+    else {
+        lO = 0;
+    }
+
+    if(rO + cO + lO == 0) {
+        state = 0;
+    }
+    if(rO == 1 && cO + lO == 0) {
+        state = 10;
+    }
+    if(rO + cO == 2 && lO == 0) {
+        state = 15;
+    }
+    if(rO + cO + lO == 3) {
+        state = 20;
+    }
+    if(cO == 1 && rO + lO == 0) {
+        state = 20;
+    }
+    if(lO + cO == 2 && rO == 0) {
+        state = 25;
+    }
+    if(lO == 1 && cO + rO == 0) {
+        state = 30;
+    }
+
+    LCD.WriteRC("  ",12,0);
+    LCD.WriteRC(state,12,0);
+    return state;
 }
