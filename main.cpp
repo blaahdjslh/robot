@@ -311,6 +311,7 @@ void trans(int mode,float angle,float velocity) { // The current kinematics incu
             break;
     }
 }
+//void transR(int mode, float angle, float velocity);
 
 void transD(float angle, float velocity, float distance) {
     //Declare Variables
@@ -348,7 +349,7 @@ void transD(float angle, float velocity, float distance) {
     StopAll();
 }
 
-void transDR(float angle, float velocity, float distance)
+//void transDR(float angle, float velocity, float distance)
 
 void StopAll() {
     motor1.Stop();
