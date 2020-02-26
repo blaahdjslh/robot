@@ -19,11 +19,19 @@ void trans(int mode,float angle,float velocity);
 //Input angle       Angle to translate at(1), angle to translate at relative to rps(2)
 //Input velocity    Speed to translate at (in motor %)
 
+//void transR(int mode, float angle, float velocity);
+//Same as trans except attempts to compensate for extra rotation incurred when translating
+//at non-cardinal directions (EX:45 Degrees)
+
 void transD(float angle, float velocity, float distance);
 //Translates the Robot a specific distance at a specific velocity
 //Input angle       Angle to translate at
 //Input velocity    Speed to translate at (in motor %)
 //Input distance    Distance to Travel in Inches
+
+//void transDR(float angle, float velocity, float distance);
+//Same as transD except attempts to compensate for extra rotation incurred when translating
+//at non-cardinal directions (EX: 45 Degrees)
 
 void moveToButton(int color);
 //Moves to button based on color input
@@ -79,11 +87,10 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 #define wheeldia            2.0
 #define centerrad           3.0
 #define yodersConstant      0.0005028464    //<----- Dr. Yoder
-//Data
+//Data for Yoder's Constant
 //0.01257116 at 25%
 #define rotpercent          25.0
 #define transpercent        30.0
-#define maximumpercent      50.0
 #define PI                  3.14159265358979323846
 /* (motor #2)   (motor #3)
  *  --> O-----O <--
@@ -94,27 +101,46 @@ AnalogInputPin  lineL(FEHIO::P1_2);
  *
 */
 
-//Motor Rotational Speeds.
-//Motor 1 cw is always defined as 1.0
-#define motor1multiccw      1.0           //This motor is really bad
-#define motor1multicw       1.0           //Each Multiplier modifies the percent each wheel gets
-#define motor2multiccw      1.0
+//Motor Rotational Speed multipliers to account for variance.
+//Currently only y = ax calcualtions take place to determine motor multiplier
+//Future versions should implement y = ax + b in order to account for friction
+//These are the "a" constants
+#define motor1multicw       1.0         // <------ Reference, do not tune
+#define motor1multiccw      1.0
 #define motor2multicw       1.0
-#define motor3multiccw      1.0           //Tuning from vex variance
-#define motor3multicw       1.0           //Tuning from vex variance
+#define motor2multiccw      1.0
+#define motor3multicw       1.0
+#define motor3multiccw      1.0
+//These are the "b" constants
+#define motor1multicwo      0.0         // <------ Reference, do not tune
+#define motor1multiccwo     0.0
+#define motor1multicwo      0.0
+#define motor1multiccwo     0.0
+#define motor1multicwo      0.0
+#define motor1multiccwo     0.0
+
+//Motor %
+#define dvx                 0.203
+//Data
+//6.1 in/s at 30% ---> 0.203
+#define dvy                 0.187
+//Data
+//5.6 in/s at 30% ---> 0.187
+#define R_constant          0.01
+//Data
+//None (!)            
 
 //Threshold values for the CdS Cells
-#define BlueMax     1.5
-#define BlueMin     0.5
-#define RedMax      0.49999999
-#define RedMin      0
+#define BlueMax             1.5
+#define BlueMin             0.5
+#define RedMax              0.49999999
+#define RedMin              0
 
 //Threshold values for the Optosensors
-#define lineMin     1.9
 #define lineMax     3.3
+#define lineMin     1.9
 
-
-//Robot Diagnostics Display
+//Robot Diagnostics Display Current Orientation
 /*
  *   0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25
  *   __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __ __
@@ -133,13 +159,13 @@ AnalogInputPin  lineL(FEHIO::P1_2);
  *12|lastDetectedLine Value
  *13|
  */
+
 int main() {
-    float startime;
-    float endtime;
+    float startime, endTime;
     int mode = 2;
+    
     switch(mode) {
     case 1:
-
         //This is the tuning area
         //Test our motors
         LCD.Clear();
@@ -192,11 +218,11 @@ int main() {
         break;
     case 3: //Tune Rotaton
         rot(1,3600);
-
         break;
     case 4: //Tune Translation
         trans(1,0,30);
         Sleep(3.0);
+        break;
     default:
         LCD.Clear();
         LCD.WriteRC("ERROR: Not a valid mode.",0,0);
@@ -287,57 +313,42 @@ void trans(int mode,float angle,float velocity) { // The current kinematics incu
 }
 
 void transD(float angle, float velocity, float distance) {
-    float x;
-    float y;
-    //Following Variables are used to calculate time
-    float Dx;   //Distance in the X direction
-    float Dy;   //Distance in the Y direction   
-    float seconds;
+    //Declare Variables
+    float x,y;
+    float m1percent, m2percent, m3percent;
+    float Dx, Dy, seconds;
+    //Determine seconds to sleep
     x = cos(((angle+90)/180) * PI);
     y = sin(((angle+90)/180) * PI);
     Dx = fabs(x * distance);
     Dy = fabs(y * distance);
-    seconds = Dx / (velocity * dvx);
-    seconds = seconds + ( Dy / (velocity * dvx));
-    float m1percent;
-    float m2percent;
-    float m3percent;
-    
-    m1percent = -1 * x;     //X Equations
-    m1percent = m1percent + 0;   //Y Equations
-    m1percent = m1percent * velocity;
-
-    m2percent = cos(PI/3) * x;   //X Equations
-    m2percent = m2percent + sin(PI/3) * y;   //Y Equations
-    m2percent = m2percent * velocity;
-
-    m3percent = cos(PI/3) * x;   //X Equations
-    m3percent = m3percent - sin(PI/3) * y;   //Y Equations
-    m3percent = m3percent * velocity;
-
+    seconds = Dx / (velocity * dvx) +  Dy / (velocity * dvy);
+    //Determine Motor Speeds //X             //Y
+    m1percent = velocity * ( -1 * x          + 0 * y );
+    m2percent = velocity * ( cos(PI/3) * x   + sin(PI/3) * y );
+    m3percent = velocity * ( cos(PI/3) * x   - sin(PI/3) * y );
+    //Set Motor Speeds
     if(m1percent <= 0) {
         motor1.SetPercent(m1percent * motor1multicw);
-    }
-    else {
+    } else {
     motor1.SetPercent(m1percent * motor1multiccw);
     }
-
     if(m2percent <= 0) {
         motor2.SetPercent(m2percent * motor2multicw);
-    }
-    else {
+    } else {
         motor2.SetPercent(m2percent * motor2multiccw);
     }
-
     if(m3percent <= 0) {
         motor3.SetPercent(m3percent * motor3multicw);
-    }
-    else {
+    } else {
         motor3.SetPercent(m3percent * motor3multiccw);
     }
+    //Sleep then Stop
     Sleep(seconds);
     StopAll();
 }
+
+void transDR(float angle, float velocity, float distance)
 
 void StopAll() {
     motor1.Stop();
