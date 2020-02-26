@@ -17,7 +17,13 @@ void trans(int mode,float angle,float velocity);
 //Translates the Robot
 //Input mode        Translating relative to robot(1) or RPS(2)
 //Input angle       Angle to translate at(1), angle to translate at relative to rps(2)
-//Input velocity    Speed to translate at
+//Input velocity    Speed to translate at (in motor %)
+
+void transD(float angle, float velocity, float distance);
+//Translates the Robot a specific distance at a specific velocity
+//Input angle       Angle to translate at
+//Input velocity    Speed to translate at (in motor %)
+//Input distance    Distance to Travel in Inches
 
 void moveToButton(int color);
 //Moves to button based on color input
@@ -260,14 +266,14 @@ void trans(int mode,float angle,float velocity) { // The current kinematics incu
                 motor1.SetPercent(m1percent * motor1multiccw);
             }
 
-            if(m1percent <= 0) {
+            if(m2percent <= 0) {
                 motor2.SetPercent(m2percent * motor2multicw);
             }
             else {
                 motor2.SetPercent(m2percent * motor2multiccw);
             }
 
-            if(m1percent <= 0) {
+            if(m3percent <= 0) {
                 motor3.SetPercent(m3percent * motor3multicw);
             }
             else {
@@ -278,6 +284,59 @@ void trans(int mode,float angle,float velocity) { // The current kinematics incu
         case 2:	//trans relative to RPS
             break;
     }
+}
+
+void transD(float angle, float velocity, float distance) {
+    float x;
+    float y;
+    //Following Variables are used to calculate time
+    float Dx;   //Distance in the X direction
+    float Dy;   //Distance in the Y direction   
+    float seconds;
+    x = cos(((angle+90)/180) * PI);
+    y = sin(((angle+90)/180) * PI);
+    Dx = fabs(x * distance);
+    Dy = fabs(y * distance);
+    seconds = Dx / (velocity * dvx);
+    seconds = seconds + ( Dy / (velocity * dvx));
+    float m1percent;
+    float m2percent;
+    float m3percent;
+    
+    m1percent = -1 * x;     //X Equations
+    m1percent = m1percent + 0;   //Y Equations
+    m1percent = m1percent * velocity;
+
+    m2percent = cos(PI/3) * x;   //X Equations
+    m2percent = m2percent + sin(PI/3) * y;   //Y Equations
+    m2percent = m2percent * velocity;
+
+    m3percent = cos(PI/3) * x;   //X Equations
+    m3percent = m3percent - sin(PI/3) * y;   //Y Equations
+    m3percent = m3percent * velocity;
+
+    if(m1percent <= 0) {
+        motor1.SetPercent(m1percent * motor1multicw);
+    }
+    else {
+    motor1.SetPercent(m1percent * motor1multiccw);
+    }
+
+    if(m2percent <= 0) {
+        motor2.SetPercent(m2percent * motor2multicw);
+    }
+    else {
+        motor2.SetPercent(m2percent * motor2multiccw);
+    }
+
+    if(m3percent <= 0) {
+        motor3.SetPercent(m3percent * motor3multicw);
+    }
+    else {
+        motor3.SetPercent(m3percent * motor3multiccw);
+    }
+    Sleep(seconds);
+    StopAll();
 }
 
 void StopAll() {
