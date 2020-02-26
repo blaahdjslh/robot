@@ -1,0 +1,54 @@
+#include <FEHLCD.h>
+#include <FEHUtility.h>
+#include <FEHMotor.h>
+#include <math.h>
+
+#define PI 3.14145926
+
+#define YODERSCONSTANT 0.691
+
+
+//Define motors
+   FEHMotor motor1(FEHMotor::Motor0,12);//Back motor
+   FEHMotor motor2(FEHMotor::Motor1,12);//Left motor
+   FEHMotor motor3(FEHMotor::Motor2,12);//right motor
+//Rotation function
+   void jonesrot(float x, float b);
+//translation forward
+   void trans_for(float x, float b);
+
+
+int main(void)
+{
+  trans_for(5,25);
+  jonesrot(180,25);
+  trans_for(5,25);
+  jonesrot(180,25);
+}
+void jonesrot(float x,float b)
+{
+    //Reading in the angle value in degrees, and converting to radians
+    float a=0;
+    float y=0;
+    a=x*PI/180;
+    y=YODERSCONSTANT*a;
+    //Setting the motor percent
+    motor1.SetPercent(b);
+    motor2.SetPercent(b);
+    motor3.SetPercent(b);
+    //The motors keep going for a calculated maount of time
+    Sleep(y);
+    //then the motors are done.
+    motor1.Stop();
+    motor2.Stop();
+    motor3.Stop();
+}
+//Determine the amount of inches that the robot moves in a second, and create an equation so that the distance can be fed in to set the time
+void trans_for(float x, float b)
+{
+    motor2.SetPercent(b);
+    motor3.SetPercent(-b);
+    Sleep(x);
+    motor2.Stop();
+    motor3.Stop();
+}
