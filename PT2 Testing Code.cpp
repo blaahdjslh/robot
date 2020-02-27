@@ -63,11 +63,11 @@ FEHMotor motor1(FEHMotor::Motor0,12); //Back Motor
 FEHMotor motor2(FEHMotor::Motor1,12); //Left Motor
 FEHMotor motor3(FEHMotor::Motor2,12); //Right Motor
 
-AnalogInputPin   CdS_cell(FEHIO::P0_0);
+AnalogInputPin   CdS_cell(FEHIO::P3_0);
 
 AnalogInputPin  lineR(FEHIO::P1_0);
-AnalogInputPin  lineC(FEHIO::P2_0);
-AnalogInputPin  lineL(FEHIO::P3_0);
+AnalogInputPin  lineC(FEHIO::P1_1);
+AnalogInputPin  lineL(FEHIO::P1_2);
 
 //------Constants------//
 #define wheeldia            2.0
@@ -90,12 +90,12 @@ AnalogInputPin  lineL(FEHIO::P3_0);
 
 //Motor Rotational Speeds.
 //Motor 1 cw is always defined as 1.0
-#define motor1multiccw      0.95
-#define motor1multicw       1.0
-#define motor2multiccw      0.98
-#define motor2multicw       0.98
-#define motor3multiccw      1.025
-#define motor3multicw       1.05
+#define motor1multiccw      1.0           //This motor is really bad
+#define motor1multicw       1.0           //Each Multiplier modifies the percent each wheel gets
+#define motor2multiccw      1.0
+#define motor2multicw       1.0
+#define motor3multiccw      1.0           //Tuning from vex variance
+#define motor3multicw       1.0           //Tuning from vex variance
 
 //Threshold values for the CdS Cells
 #define BlueMax     1.5
@@ -104,8 +104,8 @@ AnalogInputPin  lineL(FEHIO::P3_0);
 #define RedMin      0
 
 //Threshold values for the Optosensors
-#define lineMin     2.5
-#define lineMax     3.1
+#define lineMin     1.9
+#define lineMax     3.3
 
 
 //Robot Diagnostics Display
@@ -134,7 +134,7 @@ int main() {
     switch(mode) {
     case 1:
 
-        //This is the testing area
+        //This is the tuning area
         //Test our motors
         LCD.Clear();
         LCD.WriteRC("Testing Motors",3,3);
@@ -179,26 +179,34 @@ int main() {
         LCD.WriteRC("last color",8,0);
         LCD.WriteRC("last line",11,0);
 
-
         trans(1,0,30);
         Sleep(1.0);
-        rot(1,45);
+        StopAll(); // Step 1
+        rot(1,45); // Step 2
         trans(1,0,30);
-        Sleep(2.5);
+        Sleep(2.9);
+        StopAll(); //Step 3
+        rot(1,-81.5); //Step 4 //Needs to be tuned later, add motor correction factors
+        trans(1,0,45);
+        Sleep(3.0); // Adjusted time
+        StopAll(); //Step 5 (the approach)
         trans(1,180,30);
-        Sleep(0.5);
-        rot(1,-90);
-        trans(1,0,10);
-        while(true) {
-            if (testForLine()>0)
-            {
-                break;
-            }
+        Sleep(2.0);
+        StopAll();//Step 6 back up to approach ramp
+        rot(1,-90);//Step 7 turn to the right
+        trans(1,0,30);
+        Sleep(2.0);
+        StopAll();// Step 8 Line up with ramp
+        rot(1,90);//Step 9 trun left to face the ramp
+        trans(1,0,50);
+        Sleep(3.2);
+        StopAll();//Step 10: Go up the ramp
 
+
+        while(true) { //Still testing the sensors
+            testForColor();
+            testForLine();
         }
-        Sleep(1.0);
-
-
         break;
     case 3: //Tune Rotaton
         rot(1,3600);
@@ -206,10 +214,7 @@ int main() {
         break;
     case 4: //Tune Translation
         trans(1,0,30);
-        Sleep(4.0);
-        trans(1,180,30);
-        Sleep(4.0);
-        StopAll();
+        Sleep(3.0);
     default:
         LCD.Clear();
         LCD.WriteRC("ERROR: Not a valid mode.",0,0);
@@ -392,21 +397,21 @@ int testForLine() {
     cV = lineC.Value();
     lV = lineL.Value();
 
-    if(rV > lineMin && rV<lineMax) {
+    if(rV > 1.9) {
         rO = 1;
     }
     else {
         rO = 0;
     }
 
-    if(cV > lineMin && cV<lineMax) {
+    if(cV > 1.9) {
         cO = 1;
     }
     else {
         cO = 0;
     }
 
-    if(lV > lineMin && lV<lineMax) {
+    if(lV > 1.0) {
         lO = 1;
     }
     else {
