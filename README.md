@@ -10,15 +10,15 @@ Navigation Code for FEH Robotics.
 2. Implement and validate line based navigation.
 3. Implement and validate wall based navigation (ramming or bump switches).
 4. Implement and validate the RPS navigation system.
-5. Implement and validate the robot arm ticket system.
-6. Implement and validate the method for depositing the tray onto the trash can.
-7. Implement and validate the method for flipping the burger.
-8. Implement and validate the method for flipping the ice cream levers up and down.
-9. Final Path Planning.
+5. Implement and validate the method for flipping the burger.
+6. Implement and validate the method for flipping the ice cream levers up and down.
+7. Final Path Planning.
 ## Completed list
 1. Basic Translational and Rotational Movement.
 2. Identification of colors.
 3. Identification of line positions.
+4. Implement and validate the method for depositing the tray onto the trash can.
+5. Implement and validate the robot arm ticket system.
 ## Future Improvementrs
 1. Comprehensive Translational Movement, including uniform motion in every direction.
 2. Comprehensive Rotational Movement, including rotating while translating in any direction.
