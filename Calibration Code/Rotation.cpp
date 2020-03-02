@@ -37,8 +37,7 @@ void tranRPS(float a, float v);                       //done
 void tranDRPS(float a, float d, float v);             //VALIDATE
 void jrot(float a, float v);                          //done
 void jrotRPS(float a, float v);                       //done
-void mxRPS(float v);                                  //WIP
-void myRPS(float v);                                  //WIP
+void mpRPS(float v);                                  //WIP
 
 //Tuning Functions
 void motorcalibrate();                                //WIP
@@ -168,6 +167,10 @@ void jrot(float a, float v) {
 }
 void jrotRPS(float a, float v) {
     jrot(aRPS(a),v);
+}
+
+void mpRPS() {
+  
 }
 
 float aRPS(float a) {
