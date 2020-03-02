@@ -18,37 +18,53 @@
 #define bvx0  1.0   //Battery Voltage Coe 
 
 //Compensation Functions
-float compBV();
-float calcF(int wheel, float percent, float angle);
+float compBV();                                     //done
+float calcF(int wheel, float percent, float angle); //WIP
+void  aRPS(float a);                                //done
 
 //Movement Functions
 //a angle
 //d distance
 //v velocity
-void tran(float a, float v);
-void tranD(float a, float d, float v);
-void tranRPS(float a, float v);
-void tranDRPS(float a, float d, float v);
-void jrot(float a, float v);
-void jrotRPS(float a, float v);
+void tran(float a, float v);                        //done
+void tranD(float a, float d, float v);              //done
+void tranRPS(float a, float v);                     //WIP
+void tranDRPS(float a, float d, float v);           //WIP
+void jrot(float a, float v);                        //done
+void jrotRPS(float a, float v);                     //done
 
 //Tuning Functions
-void motorcalibrate;
-void translateCalibrate;
-void rotateCalibrate;
-void bVspeedCalibrate;
+void motorcalibrate;                                //WIP
+void translateCalibrate;                            //WIP
+void rotateCalibrate;                               //WIP
+void bVspeedCalibrate;                              //WIP
 
 int main() {
-  //Test this Stuff dude
+  motorcalibrate();
+  translateCalibrate();
+  rotateCalibrate();
+  bVspeedCalibrate();
 }
 
 float compBV() {
   float v, CoefficientP;
   v = Battery.Voltage();
   CoefficientP = bVx2 * pow(v,2) + bVx1 * v + bVx0;
+  return CoefficientP;
 }
 float calcF(int wheel, float percent, float rotation) {
     float friction;
+    switch(wheel) {
+      case 1: //Back Wheel
+        break;
+      case 2: //Left Wheel
+        break;
+      case 3: //Right Wheel
+        break;
+      default://Non-existent Wheel
+        return 0;
+        break;
+    }
     
 }
 void tran(float a, float v) {
@@ -106,5 +122,19 @@ void jrot(float a, float v) {
     StopAll();
 }
 void jrotRPS(float a, float v) {
-    
+    jrot(aRPS(a),v);
+}
+
+float aRPS(float a) {
+    //Calculate the smallest angle between RPS heading and desired angle
+    float rpsa, accw, acw;
+    rpsa  = RPS.Heading();
+    accw  = fabs( a - rpsa);
+    acw   = accw - 360;
+
+    if(accw <= 180) {
+      return accw;
+    } else {
+      return acw;
+    }
 }
