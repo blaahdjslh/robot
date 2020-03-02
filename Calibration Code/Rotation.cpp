@@ -9,7 +9,7 @@
 //Friction Calculations
 #define CoMx  0.0   //Center of Mass of Robot in X
 #define CoMy  0.0   //Center of Mass of Robot in Y
-#define CoeFS 1.0   //CoeF for radial displaecment
+#define CoeFS 1.0   //CoeF for radial displacement
 #define CoeFR 1.0   //CoeF for radial rotation
 
 //Battery Voltage Compensation compBV() = bVx2 * pow(batV,2) + bVx1 * batV + bvx0
@@ -17,27 +17,33 @@
 #define bvx1  1.0   //Battery Voltage Coe^1
 #define bvx0  1.0   //Battery Voltage Coe 
 
+//velocity in x and y compensation
+#define vx    6.1   //velocity in in/s in the x direction
+#define vy    5.6   //velocity in in/s in the y direction
+
 //Compensation Functions
-float compBV();                                     //done
-float calcF(int wheel, float percent, float angle); //WIP
-void  aRPS(float a);                                //done
+float compBV();                                       //done
+float calcFR(int wheel, float percent, float angle);  //WIP
+float calcFS(int wheel, float percent, float angle);  //WIP
+void  aRPS(float a);                                  //done
 
 //Movement Functions
 //a angle
 //d distance
 //v velocity
-void tran(float a, float v);                        //done
-void tranD(float a, float d, float v);              //done
-void tranRPS(float a, float v);                     //WIP
-void tranDRPS(float a, float d, float v);           //WIP
-void jrot(float a, float v);                        //done
-void jrotRPS(float a, float v);                     //done
-
+void tran(float a, float v);                          //done
+void tranD(float a, float d, float v);                //done
+void tranRPS(float a, float v);                       //done
+void tranDRPS(float a, float d, float v);             //VALIDATE
+void jrot(float a, float v);                          //done
+void jrotRPS(float a, float v);                       //done
+void mxRPS(float v);                                  //WIP
+void myRPS(float v);                                  //WIP
 //Tuning Functions
-void motorcalibrate;                                //WIP
-void translateCalibrate;                            //WIP
-void rotateCalibrate;                               //WIP
-void bVspeedCalibrate;                              //WIP
+void motorcalibrate();                                //WIP
+void translateCalibrate();                            //WIP
+void rotateCalibrate();                               //WIP
+void bVspeedCalibrate();                              //WIP
 
 int main() {
   motorcalibrate();
@@ -52,7 +58,8 @@ float compBV() {
   CoefficientP = bVx2 * pow(v,2) + bVx1 * v + bVx0;
   return CoefficientP;
 }
-float calcF(int wheel, float percent, float rotation) {
+
+float calcFR(int wheel, float percent, float rotation) {
     float friction;
     switch(wheel) {
       case 1: //Back Wheel
@@ -64,9 +71,24 @@ float calcF(int wheel, float percent, float rotation) {
       default://Non-existent Wheel
         return 0;
         break;
-    }
-    
+    }  
 }
+
+float calcFS(int wheel, float percent, float rotation) {
+    float friction;
+    switch(wheel) {
+      case 1: //Back Wheel
+        break;
+      case 2: //Left Wheel
+        break;
+      case 3: //Right Wheel
+        break;
+      default://Non-existent Wheel
+        return 0;
+        break;
+    }  
+}
+
 void tran(float a, float v) {
   float x,y;  //x and y amounts
   float m1p, m2p, m3p;  //motorpercents
@@ -97,13 +119,35 @@ void tran(float a, float v) {
   }
 }
 void tranD(float a, float d, float v) {
-    
+    float x,y;
+    float tx,ty,tt;
+    x = cos(((a+90)/180) * PI);
+    y = sin(((a+90)/180) * PI);
+    x = x * d;
+    y = y * d;
+    tx = x / (vx/v);
+    ty = y / (vy/v);
+    tt = tx + ty;
+    tran(a,v);
+    Sleep(tt);
+    StopAll();
 }
 void tranRPS(float a, float v) {
-    
+    tran(aRPS(a),v);
 }
 void tranDRPS(float a, float d, float v) {
-    
+    float x,y;
+    float tx,ty,tt;
+    x = cos(((aRPS(a)+90)/180) * PI);
+    y = sin(((aRPS(a)+90)/180) * PI);
+    x = x * d;
+    y = y * d;
+    tx = x / (vx/v);
+    ty = y / (vy/v);
+    tt = tx + ty;
+    tran(aRPS(a),v);
+    Sleep(tt);
+    StopAll();
 }
 void jrot(float a, float v) {
     float d,s;  //direction and angle
