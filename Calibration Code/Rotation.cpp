@@ -48,10 +48,37 @@ float compBV() {
   CoefficientP = bVx2 * pow(v,2) + bVx1 * v + bVx0;
 }
 float calcF(int wheel, float percent, float rotation) {
+    float friction;
     
 }
 void tran(float a, float v) {
-    
+  float x,y;
+  float m1p, m2p, m3p;
+  x = cos(((a+90)/180) * PI);
+  y = sin(((a+90)/180) * PI);
+  
+  m1p = (-1 * x          + 0 * y)           * v;
+  m2p = (cos(PI/3) * x   + sin(PI/3) * y)   * v;
+  m3p = (cos(PI/3) * x   - sin(PI/3) * y)   * v;
+
+  
+  if(m1p <= 0) {
+    motor1.SetPercent(m1p * motor1multicw);
+  } else {
+    motor1.SetPercent(m1p * motor1multiccw);
+  }
+
+  if(m2p <= 0) {
+    motor2.SetPercent(m2p * motor2multicw);
+  } else {
+    motor2.SetPercent(m2p * motor2multiccw);
+  }
+
+  if(m3p <= 0) {
+    motor3.SetPercent(m3p * motor3multicw);
+  } else {
+    motor3.SetPercent(m3p * motor3multiccw);
+  }
 }
 void tranD(float a, float d, float v) {
     
