@@ -13,7 +13,19 @@ void rot(int mode,float angle);
 //Input mode        Rotates relative to robot(1) Rotates to RPS relative angle(2)
 //Input angle       Amount to rotate in degrees sign dictates rotation direction(1), Angle to match the RPS (2)
 
+void rotV(int mode, float angle, float velocity);
+//Rotates the Robot
+//Input mode        Rotates relative to robot(1) Rotates to RPS relative angle(2)
+//Input angle       Amount to rotate in degrees sign dictates rotation direction(1), Angle to match the RPS (2)
+//Input velocity    Motor % to rotate at
+
 void trans(int mode,float angle,float velocity);
+//Translates the Robot
+//Input mode        Translating relative to robot(1) or RPS(2)
+//Input angle       Angle to translate at(1), angle to translate at relative to rps(2)
+//Input velocity    Speed to translate at
+
+void transD(int mode,float angle,float velocity);   //In progress, distance does not work yet
 //Translates the Robot
 //Input mode        Translating relative to robot(1) or RPS(2)
 //Input angle       Angle to translate at(1), angle to translate at relative to rps(2)
@@ -90,12 +102,12 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 
 //Motor Rotational Speeds.
 //Motor 1 cw is always defined as 1.0
-#define motor1multiccw      1.0           //This motor is really bad
-#define motor1multicw       1.0           //Each Multiplier modifies the percent each wheel gets
+#define motor1multiccw      0.9
+#define motor1multicw       1.0
 #define motor2multiccw      1.0
 #define motor2multicw       1.0
-#define motor3multiccw      1.0           //Tuning from vex variance
-#define motor3multicw       1.0           //Tuning from vex variance
+#define motor3multiccw      1.05
+#define motor3multicw       1.075
 
 //Threshold values for the CdS Cells
 #define BlueMax     1.5
@@ -130,12 +142,10 @@ AnalogInputPin  lineL(FEHIO::P1_2);
 int main() {
     float startime;
     float endtime;
-    int mode = 2;
+    int mode = 4;
     switch(mode) {
     case 1:
-
-        //This is the tuning area
-        //Test our motors
+        //Testing Connections of Motors
         LCD.Clear();
         LCD.WriteRC("Testing Motors",3,3);
         motor1.SetPercent(20);
@@ -189,8 +199,13 @@ int main() {
 
         break;
     case 4: //Tune Translation
-        trans(1,0,30);
-        Sleep(3.0);
+        trans(1,-90,30);
+        Sleep(5.0);
+        StopAll();
+        trans(1,90,30);
+        Sleep(5.0);
+        StopAll();
+        break;
     default:
         LCD.Clear();
         LCD.WriteRC("ERROR: Not a valid mode.",0,0);
@@ -229,7 +244,83 @@ void rot(int mode,float angle) {  //Dumbed down verison of rot, much more reliab
     }
 }
 
+void rotV(int mode, float angle, float velocity) {
+    switch(mode) {
+        case 1 :
+            float direction;
+            float seconds;
+            if(angle >= 0 ){
+                direction = -1.0;
+            }   else if (angle < 0) {
+                direction = 1.0;
+            }
+            seconds = angle * yodersConstant * (rotpercent / velocity);
+            seconds = fabs(seconds);
+            motor1.SetPercent(velocity * direction);
+            motor2.SetPercent(velocity * direction);
+            motor3.SetPercent(velocity * direction);
+            //LCD.WriteRC(seconds,13,0);
+            Sleep(seconds);
+            StopAll();
+            break;
+        case 2:
+            //Currently Defunct, Waiting for RPS exploration
+            break;
+    }
+}
+
 void trans(int mode,float angle,float velocity) { // The current kinematics incur significant dift when not moving in a cardinal direction (UP DOWN LEFT RIGHT)
+    switch(mode) {
+        case 1: //translate from robots local heading
+            float x;
+            float y;
+            x = cos(((angle+90)/180) * PI);
+            y = sin(((angle+90)/180) * PI);
+
+            float m1percent;
+            float m2percent;
+            float m3percent;
+
+            m1percent = -1 * x;     //X Equations
+            m1percent = m1percent + 0;   //Y Equations
+            m1percent = m1percent * velocity;
+
+            m2percent = cos(PI/3) * x;   //X Equations
+            m2percent = m2percent + sin(PI/3) * y;   //Y Equations
+            m2percent = m2percent * velocity;
+
+            m3percent = cos(PI/3) * x;   //X Equations
+            m3percent = m3percent - sin(PI/3) * y;   //Y Equations
+            m3percent = m3percent * velocity;
+
+            if(m1percent <= 0) {
+                motor1.SetPercent(m1percent * motor1multicw);
+            }
+            else {
+                motor1.SetPercent(m1percent * motor1multiccw);
+            }
+
+            if(m1percent <= 0) {
+                motor2.SetPercent(m2percent * motor2multicw);
+            }
+            else {
+                motor2.SetPercent(m2percent * motor2multiccw);
+            }
+
+            if(m1percent <= 0) {
+                motor3.SetPercent(m3percent * motor3multicw);
+            }
+            else {
+                motor3.SetPercent(m3percent * motor3multiccw);
+            }
+
+            break;
+        case 2:	//trans relative to RPS
+            break;
+    }
+}
+
+void transD(int mode,float angle,float velocity) { // The current kinematics incur significant dift when not moving in a cardinal direction (UP DOWN LEFT RIGHT)
     switch(mode) {
         case 1: //translate from robots local heading
             float x;
