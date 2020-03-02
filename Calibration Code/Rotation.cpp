@@ -52,8 +52,8 @@ float calcF(int wheel, float percent, float rotation) {
     
 }
 void tran(float a, float v) {
-  float x,y;
-  float m1p, m2p, m3p;
+  float x,y;  //x and y amounts
+  float m1p, m2p, m3p;  //motorpercents
   x = cos(((a+90)/180) * PI);
   y = sin(((a+90)/180) * PI);
   
@@ -90,7 +90,20 @@ void tranDRPS(float a, float d, float v) {
     
 }
 void jrot(float a, float v) {
-    
+    float d,s;  //direction and angle
+    if(a >= 0 ){
+      d = -1.0;
+    }   else if (a < 0) {
+      d = 1.0;
+    }
+    s = fabs(a * yodersConstant * (rotpercent/v));
+
+    motor1.SetPercent(v * d);
+    motor2.SetPercent(v * d);
+    motor3.SetPercent(v * d);
+    //LCD.WriteRC(s,13,0);
+    Sleep(s);
+    StopAll();
 }
 void jrotRPS(float a, float v) {
     
