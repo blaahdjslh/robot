@@ -13,9 +13,9 @@
 #define CoeFR 1.0   //CoeF for radial rotation
 
 //Battery Voltage Compensation compBV() = bVx2 * pow(batV,2) + bVx1 * batV + bvx0
-#define bVx2  1.0   //Battery Voltage Coe 
-#define bvx1  1.0   //Battery Voltage Coe
-#define bvx0  1.0   //Battery Voltage Coe
+#define bVx2  1.0   //Battery Voltage Coe^2
+#define bvx1  1.0   //Battery Voltage Coe^1
+#define bvx0  1.0   //Battery Voltage Coe 
 
 //Compensation Functions
 float compBV();
