@@ -32,6 +32,12 @@ void tranDRPS(float a, float d, float v);
 void jrot(float a, float v);
 void jrotRPS(float a, float v);
 
+//Tuning Functions
+void motorcalibrate;
+void translateCalibrate;
+void rotateCalibrate;
+void bVspeedCalibrate;
+
 int main() {
   //Test this Stuff dude
 }
@@ -41,7 +47,7 @@ float compBV() {
   v = Battery.Voltage();
   CoefficientP = bVx2 * pow(v,2) + bVx1 * v + bVx0;
 }
-float calcF(float rotation) {
+float calcF(int wheel, float percent, float rotation) {
     
 }
 void tran(float a, float v) {
