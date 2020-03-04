@@ -198,27 +198,16 @@ int main() {
         //This is the main course running function!
 
         LCD.Clear();
-
         //waitForStart();
-
         LCD.Clear();
-
         //Diagnostic Labels
-
         LCD.WriteRC("CdS Voltage",0,0);
-
         LCD.WriteRC("Diagnostics",0,14);
-
         LCD.WriteRC("Optosensor Voltage",4,0);
-
         LCD.WriteRC("Left",6,0);
-
         LCD.WriteRC("Center",6,8);
-
         LCD.WriteRC("Right",6,16);
-
         LCD.WriteRC("last color",8,0);
-
         LCD.WriteRC("last line",11,0);
 
 
@@ -246,7 +235,7 @@ int main() {
         // StopAll();//Step 10: Go up the ramp
 
     //PT3 code starts here
-        //waitForStart();// wait for light
+
 
        // trans(1,0,30);
        // Sleep(1.7);
@@ -261,20 +250,15 @@ int main() {
         trans(1,180,30);
         Sleep(1.2);
         StopAll();
-        Servoarm(10.);
-        Sleep(1.0);
-        Servoarm(20.);
-        Sleep(1.0);
-        Servoarm(30.);
-        Sleep(1.0);
-        Servoarm(50.);
-        Sleep(1.0);
+        Servoarm(35.);
+        Sleep(2.0);
+        trans(1,180,10);
+        Sleep(2.3);
+        StopAll();
         Servoarm(90.);
-        Sleep(1.0);
-       // trans(1,0,30);
-       // Sleep(1.7);
-       // StopAll();
 
+
+        //For the wheel
 
         while(true) { //Still testing the sensors
 
