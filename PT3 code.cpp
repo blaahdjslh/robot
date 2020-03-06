@@ -122,7 +122,7 @@ FEHServo arm(FEHServo::Servo7); //Servo Motor
 #define vx                  6   //  in/s
 #define vy                  6   //  in/s
 #define rpsratio            1   //  Realin/RPSin
-#define rpsOffset           181.00  //Angle that is pointing "forward" from rps heading
+#define rpsOffset           180.00  //Angle that is pointing "forward" from rps heading
 /* (motor #2)   (motor #3)
  *  --> O-----O <--
  *       \   /
