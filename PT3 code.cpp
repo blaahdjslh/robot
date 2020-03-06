@@ -8,7 +8,7 @@
 
 
 
-void waitForStart();
+void waitForStart(float waitTime);
 //Waits until the color red is detected by the robot
 
 void rot(float angle);
@@ -271,7 +271,7 @@ int main() {
         //This is the main course running function!
 
         LCD.Clear();
-        //waitForStart();
+        //waitForStart(10.0);
         LCD.Clear();
         //Diagnostic Labels
         LCD.WriteRC("CdS Voltage",0,0);
@@ -345,14 +345,17 @@ int main() {
 
     case 3: //Test Wall Alignment
         RPS.InitializeTouchMenu();
-        //waitForStart();
+        waitForStart(5.0);
+        Sleep(5.0);
         tran(1,0,30);
-        Sleep(1.0);
+        Sleep(1.5);
         headRPS(0.0);
         xyRPS(18.0,18.0);
         headRPS(0.0);
-        tran(1,0,70);
+        tran(1,0,80);
         Sleep(2.4);
+        headRPS(0.0);
+        matchRPS(17.0,50);
         headRPS(0.0);
         matchRPS(17.0,50);
         rot(-90);
@@ -361,8 +364,9 @@ int main() {
         tran(1,0,70);
         Sleep(0.1);
         tran(1,180,30);
-        Sleep(1.1);
+        Sleep(1.23);
         rot(90);
+        //headRPS(0.0);
         tran(1,0,20);
         while(testForLine() != 100) {
             //Do nothing and wait
@@ -381,8 +385,8 @@ int main() {
         Sleep(0.75);
         servoArm(70.0);
         Sleep(0.75);
-        servoArm(110.0);
-        Sleep(1.0);
+        servoArm(120.0);
+        Sleep(2.0);
         stop();
 
         //Leave the burger and recalibrate
@@ -390,6 +394,44 @@ int main() {
         Sleep(1.0);
         servoArm(100.0);
         stop();
+
+        //Flip down the burger
+        tran(1,90,30);
+        Sleep(0.33);
+        stop();
+        tran(1,180,30);
+        Sleep(0.7);
+        stop();
+        rot(-30);
+        servoArm(70);
+        rot(45);
+        Sleep(0.5);
+        servoArm(100.0);
+        tran(1,0,30);
+        Sleep(1.0);
+        stop();
+
+        //Try for a lever
+        headRPS(0.0);
+        matchRPS(17.0,50);
+        headRPS(0.0);
+        matchRPS(17.0,50);
+        rot(45);
+        tran(1,0,30);
+        Sleep(1.0);
+        rot(182);
+        servoArm(100.0);
+        tran(1,180,30);
+        Sleep(1.0);
+        tran(1,90,30);
+        Sleep(0.33);
+        rot(60);
+        servoArm(50);
+        stop();
+        tran(1,0,15);
+        Sleep(3.0);
+        stop();
+        /*
         headRPS(180);
         xyRPS(25,54);
         rot(90);
@@ -400,6 +442,7 @@ int main() {
         tran(1,180,30);
         Sleep(1.0);
         rot(180);
+        */
         break;
 
     case 4: //Feedback
@@ -418,8 +461,10 @@ int main() {
     }
 }
 
-void waitForStart() {
-    while(testForColor() != 2) {
+void waitForStart(float waitTime) {
+    float endTime;
+    endTime = waitTime + TimeNow();
+    while( (testForColor() != 2) && endTime < TimeNow()) {
         LCD.WriteRC("Waiting For Light",3,3);
     }
 }
