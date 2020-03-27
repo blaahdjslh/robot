@@ -95,7 +95,7 @@ FEHMotor motor1(FEHMotor::Motor0,12); //Back Motor
 FEHMotor motor2(FEHMotor::Motor1,12); //Left Motor
 FEHMotor motor3(FEHMotor::Motor2,12); //Right Motor
 
-AnalogInputPin   CdS_cell(FEHIO::P3_0); //CdS Cell
+AnalogInputPin   CdS_cell(FEHIO::P0_0); //CdS Cell
 
 AnalogInputPin  lineR(FEHIO::P1_0); //Line following kit right
 AnalogInputPin  lineC(FEHIO::P2_0); // Line following kit middle
